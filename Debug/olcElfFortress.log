@@ -1,4 +1,4 @@
 ﻿  main.cpp
-C:\Users\mmprk\source\repos\olcElfFortress\olcElfFortress\main.cpp(74,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\mmprk\source\repos\olcElfFortress\olcElfFortress\main.cpp(77,10): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mmprk\source\repos\olcElfFortress\olcElfFortress\main.cpp(69,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\mmprk\source\repos\olcElfFortress\olcElfFortress\main.cpp(72,10): warning C4018: '<': signed/unsigned mismatch
   olcElfFortress.vcxproj -> C:\Users\mmprk\source\repos\olcElfFortress\Debug\olcElfFortress.exe
