@@ -3,27 +3,38 @@
 
 // TODO: Start creating the object testing arena
 
-class Game : public olc::PixelGameEngine
+//===================================================
+// Global Variables and Utility Functions
+//===================================================
+
+const int g_pixPerChar = 6; // length of each charicter in pixels
+const int g_pixPerSpace = 1; // each space inbetween charicters is 1 pixel
+
+int g_currentMenu = 0;
+
+bool g_mmLoaded;
+bool g_otaLoaded;
+
+int g_StringLengthPix(const std::string str, int uiScale)
 {
-public:
-	Game()
+	int sum = 0;
+	for (int i = 0; i < str.length(); i++)
 	{
-		sAppName = "Elf Fortress";
+		sum += g_pixPerChar * uiScale + 1; // char
+		if (i < str.length() - 1) // no space at the end
+			sum += g_pixPerSpace * uiScale; // add space inbetween chars
 	}
 
+	return sum; // This may not be a precise measurement, but it's close enough for now
+}
+
+//===================================================
+// Game Scene Structs
+//===================================================
+
+struct MainMenu
+{
 public:
-	const int pixPerChar = 6; // length of each charicter in pixels
-	const int pixPerSpace = 1; // each space inbetween charicters is 1 pixel
-
-	int currentMenu = 0;
-
-	bool mmLoaded;
-	bool otaLoaded;
-
-	//===================================================
-	// MAIN MENU SCREEN members
-	//===================================================
-
 	// User Information
 	int currentMenuSelection = 1;
 
@@ -72,27 +83,6 @@ public:
 	int menu5PosX;
 	int menu5PosY;
 
-	//===================================================
-	// Object Testing Arena members
-	//===================================================
-
-	//===================================================
-	// Utility functions
-	//===================================================
-
-	int StringLengthPix(const std::string str, int uiScale)
-	{
-		int sum = 0;
-		for (int i = 0; i < str.length(); i++)
-		{
-			sum += pixPerChar * uiScale + 1; // char
-			if (i < str.length() - 1) // no space at the end
-				sum += pixPerSpace * uiScale; // add space inbetween chars
-		}
-
-		return sum; // This may not be a precise measurement, but it's close enough for now
-	}
-
 	std::string CreateSubtitle()
 	{
 		const std::string subtitleTraits[9] = { "Nature", "Trees", "Pointy Ears", "Wisdom", "Divinity", "Androgyny", "Immortality", "Magic", "Vanity" };
@@ -105,20 +95,16 @@ public:
 		return fullstring;
 	}
 
-	//===================================================
-	// Run functions
-	//===================================================
-
-	void Run_MainMenu()
+	void Run(olc::PixelGameEngine* pge)
 	{
-		if (!mmLoaded) Load_MainMenu();
+		if (!g_mmLoaded) Load(pge);
 
 		// Main Menu Navigation
-		if (GetKey(olc::DOWN).bPressed)
+		if (pge->GetKey(olc::DOWN).bPressed)
 		{
 			currentMenuSelection += 1;
 		}
-		if (GetKey(olc::UP).bPressed)
+		if (pge->GetKey(olc::UP).bPressed)
 		{
 			currentMenuSelection -= 1;
 		}
@@ -126,10 +112,10 @@ public:
 		if (currentMenuSelection < 1) currentMenuSelection = 5;
 
 		// If the user hits ENTER on a menu, load that menu
-		if (GetKey(olc::ENTER).bPressed)
+		if (pge->GetKey(olc::ENTER).bPressed)
 		{
-			currentMenu = currentMenuSelection;
-			mmLoaded = false;
+			g_currentMenu = currentMenuSelection;
+			g_mmLoaded = false;
 		}
 
 		// Update the menu color based on the current menu selection
@@ -158,117 +144,134 @@ public:
 		}
 
 		// Draw title
-		DrawString({ mainMenuTitlePosX, mainMenuTitlePosY }, mainMenuTitleText, olc::WHITE, 2);
+		pge->DrawString({ mainMenuTitlePosX, mainMenuTitlePosY }, mainMenuTitleText, olc::WHITE, 2);
 		// Draw Subtitle
-		DrawString({ subtitlePosX, subtitlePosY }, subtitleText, olc::RED);
+		pge->DrawString({ subtitlePosX, subtitlePosY }, subtitleText, olc::RED);
 		// Draw menu item 1, "Create New World"
-		DrawString({ menu1PosX, menu1PosY }, menu1Text, menu1Color);
+		pge->DrawString({ menu1PosX, menu1PosY }, menu1Text, menu1Color);
 		// Draw menu item 2, "Load Game"
-		DrawString({ menu2PosX, menu2PosY }, menu2Text, menu2Color);
+		pge->DrawString({ menu2PosX, menu2PosY }, menu2Text, menu2Color);
 		// Draw menu item 3, "Object Testing Arena"
-		DrawString({ menu3PosX, menu3PosY }, menu3Text, menu3Color);
+		pge->DrawString({ menu3PosX, menu3PosY }, menu3Text, menu3Color);
 		// Draw menu, "About EF"
-		DrawString({ menu4PosX, menu4PosY }, menu4Text, menu4Color);
+		pge->DrawString({ menu4PosX, menu4PosY }, menu4Text, menu4Color);
 		// Draw menu, Quit
-		DrawString({ menu5PosX, menu5PosY }, menu5Text, menu5Color);
+		pge->DrawString({ menu5PosX, menu5PosY }, menu5Text, menu5Color);
 	}
 
-	void Run_ObjectTestingArena()
+	void Load(olc::PixelGameEngine* pge)
 	{
-		if (!otaLoaded) Load_ObjectTestingArena();
-	}
-
-	//===================================================
-	// Load functions
-	//===================================================
-
-	void Load_MainMenu()
-	{
-		mainMenuTitlePosX = ScreenWidth() / 2 - StringLengthPix(mainMenuTitleText, 2) / 2;
+		mainMenuTitlePosX = pge->ScreenWidth() / 2 - g_StringLengthPix(mainMenuTitleText, 2) / 2;
 		mainMenuTitlePosY = 10;
 
 		subtitleText = CreateSubtitle();
-		subtitlePosX = ScreenWidth() / 2 - StringLengthPix(subtitleText, 1) / 2;
+		subtitlePosX = pge->ScreenWidth() / 2 - g_StringLengthPix(subtitleText, 1) / 2;
 		subtitlePosY = mainMenuTitlePosY + 20;
 
-		menu1PosX = ScreenWidth() / 2 - StringLengthPix(menu1Text, 1) / 2;
+		menu1PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu1Text, 1) / 2;
 		menu1PosY = subtitlePosY + 30;
 
-		menu2PosX = ScreenWidth() / 2 - StringLengthPix(menu2Text, 1) / 2;
+		menu2PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu2Text, 1) / 2;
 		menu2PosY = menu1PosY + 15;
 
-		menu3PosX = ScreenWidth() / 2 - StringLengthPix(menu3Text, 1) / 2;
+		menu3PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu3Text, 1) / 2;
 		menu3PosY = menu2PosY + 15;
 
-		menu4PosX = ScreenWidth() / 2 - StringLengthPix(menu4Text, 1) / 2;
+		menu4PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu4Text, 1) / 2;
 		menu4PosY = menu3PosY + 15;
 
-		menu5PosX = ScreenWidth() / 2 - StringLengthPix(menu5Text, 1) / 2;
+		menu5PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu5Text, 1) / 2;
 		menu5PosY = menu4PosY + 15;
 
 		// Debug output
-		std::cout << "Menu Title Pixel Width: " << StringLengthPix(mainMenuTitleText, 2) << std::endl;
+		std::cout << "Menu Title Pixel Width: " << g_StringLengthPix(mainMenuTitleText, 2) << std::endl;
 		std::cout << "Menu Title PosX: " << mainMenuTitlePosX << std::endl;
 		std::cout << "Menu Title PosY: " << mainMenuTitlePosY << std::endl;
 		std::cout << " " << std::endl;
-		std::cout << "Subtitle Pixel Width: " << StringLengthPix(subtitleText, 1) << std::endl;
+		std::cout << "Subtitle Pixel Width: " << g_StringLengthPix(subtitleText, 1) << std::endl;
 		std::cout << "Subtitle PosX: " << subtitlePosX << std::endl;
 		std::cout << "Subtitle PosY: " << subtitlePosY << std::endl;
 		std::cout << " " << std::endl;
 		// End Debug output
 
-		mainMenuTitlePosX = ScreenWidth() / 2 - StringLengthPix(mainMenuTitleText, 2) / 2;
+		mainMenuTitlePosX = pge->ScreenWidth() / 2 - g_StringLengthPix(mainMenuTitleText, 2) / 2;
 		mainMenuTitlePosY = 10;
 
 		subtitleText = CreateSubtitle();
-		subtitlePosX = ScreenWidth() / 2 - StringLengthPix(subtitleText, 1) / 2;
+		subtitlePosX = pge->ScreenWidth() / 2 - g_StringLengthPix(subtitleText, 1) / 2;
 		subtitlePosY = mainMenuTitlePosY + 20;
 
-		menu1PosX = ScreenWidth() / 2 - StringLengthPix(menu1Text, 1) / 2;
+		menu1PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu1Text, 1) / 2;
 		menu1PosY = subtitlePosY + 30;
 
-		menu2PosX = ScreenWidth() / 2 - StringLengthPix(menu2Text, 1) / 2;
+		menu2PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu2Text, 1) / 2;
 		menu2PosY = menu1PosY + 15;
 
-		menu3PosX = ScreenWidth() / 2 - StringLengthPix(menu3Text, 1) / 2;
+		menu3PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu3Text, 1) / 2;
 		menu3PosY = menu2PosY + 15;
 
-		menu4PosX = ScreenWidth() / 2 - StringLengthPix(menu4Text, 1) / 2;
+		menu4PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu4Text, 1) / 2;
 		menu4PosY = menu3PosY + 15;
 
-		menu5PosX = ScreenWidth() / 2 - StringLengthPix(menu5Text, 1) / 2;
+		menu5PosX = pge->ScreenWidth() / 2 - g_StringLengthPix(menu5Text, 1) / 2;
 		menu5PosY = menu4PosY + 15;
 
 		// Debug output
-		std::cout << "Menu Title Pixel Width: " << StringLengthPix(mainMenuTitleText, 2) << std::endl;
+		std::cout << "Menu Title Pixel Width: " << g_StringLengthPix(mainMenuTitleText, 2) << std::endl;
 		std::cout << "Menu Title PosX: " << mainMenuTitlePosX << std::endl;
 		std::cout << "Menu Title PosY: " << mainMenuTitlePosY << std::endl;
-		std::cout << " " << std::endl; 
-		std::cout << "Subtitle Pixel Width: " << StringLengthPix(subtitleText, 1) << std::endl;
+		std::cout << " " << std::endl;
+		std::cout << "Subtitle Pixel Width: " << g_StringLengthPix(subtitleText, 1) << std::endl;
 		std::cout << "Subtitle PosX: " << subtitlePosX << std::endl;
 		std::cout << "Subtitle PosY: " << subtitlePosY << std::endl;
 		std::cout << " " << std::endl;
 		// End Debug output
 
 		// Draw black background
-		for (int x = 0; x < ScreenWidth(); x++)
-			for (int y = 0; y < ScreenHeight(); y++)
-				Draw(x, y, olc::Pixel(olc::BLACK));
+		for (int x = 0; x < pge->ScreenWidth(); x++)
+			for (int y = 0; y < pge->ScreenHeight(); y++)
+				pge->Draw(x, y, olc::Pixel(olc::BLACK));
 
-		mmLoaded = true;
+		g_mmLoaded = true;
 	}
-
-	void Load_ObjectTestingArena()
-	{
-		// Draw black background
-		for (int x = 0; x < ScreenWidth(); x++)
-			for (int y = 0; y < ScreenHeight(); y++)
-				Draw(x, y, olc::Pixel(olc::BLACK));
-
-		mmLoaded = true;
-	}
-
 	
+};
+
+struct ObjectTestingArena
+{
+public:
+	void Run(olc::PixelGameEngine* pge)
+	{
+		if (!g_otaLoaded) Load(pge);
+	}
+
+	void Load(olc::PixelGameEngine* pge)
+	{
+		// Draw black background
+		for (int x = 0; x < pge->ScreenWidth(); x++)
+			for (int y = 0; y < pge->ScreenHeight(); y++)
+				pge->Draw(x, y, olc::Pixel(olc::BLACK));
+
+		pge->DrawString({ 0, 9 }, "Object Testing Arena");
+
+		g_mmLoaded = true;
+	}
+};
+
+//===================================================
+// Main Game Class and Main Entry Function
+//===================================================
+class Game : public olc::PixelGameEngine
+{
+public:
+	Game()
+	{
+		sAppName = "Elf Fortress";
+	}
+
+public:
+	MainMenu mm;
+	ObjectTestingArena ota;
 
 public:
 	bool OnUserCreate() override
@@ -282,8 +285,8 @@ public:
 	{
 		// called once per frame
 		
-		if (currentMenu == 0) Run_MainMenu();
-		if (currentMenu == 3) Run_ObjectTestingArena();
+		if (g_currentMenu == 0) mm.Run(this);
+		if (g_currentMenu == 3) ota.Run(this);
 
 		return true;
 	}
