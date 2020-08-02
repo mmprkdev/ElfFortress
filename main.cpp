@@ -2,6 +2,12 @@
 #include "olcPixelGameEngine.h"
 
 // TODO: Start creating the object testing arena
+// - Create the menu
+
+// TODO: Rename the MainMenu struct to StartScreen
+
+// TODO: Figure out why the FPS is much higher on the start screen
+// compared to the object testing arena
 
 //===================================================
 // Global Variables and Utility Functions
@@ -9,6 +15,9 @@
 
 const int g_pixPerChar = 6; // length of each charicter in pixels
 const int g_pixPerSpace = 1; // each space inbetween charicters is 1 pixel
+
+const int g_screenWidth = 800;
+const int g_screenHeight = 450;
 
 int g_currentMenu = 0;
 
@@ -240,6 +249,27 @@ public:
 struct ObjectTestingArena
 {
 public:
+	int boarderSize = 8; // size in pixels of the grey boarder that extends around the screen
+	int mmBuffer = 8; // space in-between the main menu text and the boarder 
+	int mmOptSpace = 8; // space in-between the main menu option parts
+	
+	// Main menu inside boarder vectors
+	olc::vi2d mainMenuTopLeft = { ((g_screenWidth / 4) * 3) + boarderSize, boarderSize };
+	olc::vi2d mainMenuTopRight = { g_screenWidth - boarderSize, boarderSize };
+	olc::vi2d mainMenuBottomRight = { g_screenWidth - boarderSize, g_screenHeight - boarderSize };
+	olc::vi2d mainMenuBottomLeft = { ((g_screenWidth / 4) * 3) + boarderSize, g_screenHeight - boarderSize };
+
+	// Main menu option 1
+	std::string mmOpt1Prt1Text = "a:";
+	olc::vi2d mmOpt1Prt1Pos = { mainMenuTopLeft.x + mmBuffer, boarderSize + mmBuffer };
+	olc::Pixel mmOpt1Prt1Color = olc::GREEN;
+	std::string mmOpt1Prt2Text = "View Announcements";
+	olc::vi2d mmOpt1Prt2Pos = { mmOpt1Prt1Pos.x + g_StringLengthPix(mmOpt1Prt1Text, 1) + mmOptSpace, mmOpt1Prt1Pos.y };
+	olc::Pixel mmOpt1Prt2Color = olc::GREY;
+	// Main menu option 2
+	
+	
+public:
 	void Run(olc::PixelGameEngine* pge)
 	{
 		if (!g_otaLoaded) Load(pge);
@@ -252,7 +282,22 @@ public:
 			for (int y = 0; y < pge->ScreenHeight(); y++)
 				pge->Draw(x, y, olc::Pixel(olc::BLACK));
 
-		pge->DrawString({ 0, 9 }, "Object Testing Arena");
+		// Draw Boarders
+		// Bottom
+		pge->FillRect({ 0, g_screenHeight - boarderSize }, { g_screenWidth, g_screenHeight - 1 }, olc::GREY);
+		// Right
+		pge->FillRect({ g_screenWidth - boarderSize, 0 }, { g_screenWidth - 1, g_screenHeight }, olc::GREY);
+		// Top
+		pge->FillRect({ 0, 0 }, { g_screenWidth,  boarderSize }, olc::GREY);
+		// Left
+		pge->FillRect({ 0, 0 }, { boarderSize, g_screenHeight }, olc::GREY);
+		// Menu divider
+		pge->FillRect({ mainMenuTopLeft.x - boarderSize, mainMenuTopLeft.y }, { boarderSize, g_screenHeight }, olc::GREY);
+
+		// Draw main menu
+		// Option1
+		pge->DrawString(mmOpt1Prt1Pos, mmOpt1Prt1Text, mmOpt1Prt1Color);
+		pge->DrawString(mmOpt1Prt2Pos, mmOpt1Prt2Text, mmOpt1Prt2Color);
 
 		g_mmLoaded = true;
 	}
@@ -296,7 +341,7 @@ public:
 int main()
 {
 	Game game;
-	if (game.Construct(500, 300, 2, 2))
+	if (game.Construct(g_screenWidth, g_screenHeight, 2, 2))
 		game.Start();
 
 	return 0;
